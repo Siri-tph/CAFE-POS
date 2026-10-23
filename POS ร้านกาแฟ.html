@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="th"><head><meta charset="utf-8"><title>POS ร้านกาแฟ</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f2f5ef;--panel:#fff;--ink:#1d2a1f;--mute:#66736a;--line:#d9e1d6;--acc:#3f6b2f;--accink:#fff;--soft:#e6eee0;--warn:#b3402a;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141a15;--panel:#1d261f;--ink:#e8efe6;--mute:#93a197;--line:#2f3b32;--acc:#8fc06f;--accink:#12200c;--soft:#26332a;--warn:#e88a72}}
+:root[data-theme="dark"]{--bg:#141a15;--panel:#1d261f;--ink:#e8efe6;--mute:#93a197;--line:#2f3b32;--acc:#8fc06f;--accink:#12200c;--soft:#26332a;--warn:#e88a72}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "IBM Plex Sans Thai",system-ui,sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:12px}
+header{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:12px}
+h1{font-size:20px;margin:0 auto 0 0;font-weight:700}
+h2{font-size:15px;margin:14px 0 6px;font-weight:700}
+.pill{font-size:12px;color:var(--mute);border:1px solid var(--line);border-radius:99px;padding:2px 10px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px;background:var(--soft);padding:3px;border-radius:10px}
+button{font:inherit;color:inherit;cursor:pointer}
+.tabs button,.seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font-size:14px}
+.tabs button.on,.seg button.on{background:var(--acc);color:var(--accink);font-weight:500}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.sell{display:grid;gap:12px}
+@media(min-width:860px){.sell{grid-template-columns:1fr 340px;align-items:start}.cart{position:sticky;top:12px}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px}
+.seg{display:inline-flex;gap:8px;background:var(--soft);padding:3px;border-radius:8px;margin-right:8px}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(128px,1fr));gap:12px}
+.tile{display:flex;justify-content:space-between;align-items:baseline;gap:6px;text-align:left;background:var(--bg);border:1px solid var(--line);border-left:4px solid var(--acc);border-radius:6px;padding:10px}
+.tile:active{background:var(--soft)}
+.tile b{font-weight:500}.tile span{color:var(--acc);font-weight:700}
+.line{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.line small{display:block;color:var(--mute)}
+.qty{display:flex;align-items:center;gap:10px}
+.qty button{width:28px;height:28px;border:1px solid var(--line);background:var(--bg);border-radius:6px}
+.row{display:flex;justify-content:space-between;padding:3px 0}
+.big{font-size:20px;font-weight:700}
+.pos{color:var(--acc);font-weight:700}
+.neg{color:var(--warn);font-weight:700}
+input[type=number],input[type=date],input[type=text]{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+input[type=number],input[type=date]{width:110px}
+.pay{width:100%;margin-top:10px;padding:12px;border:0;border-radius:8px;background:var(--acc);color:var(--accink);font-weight:700;font-size:16px}
+.pay:disabled{opacity:.4;cursor:default}
+.link{border:0;background:none;color:var(--mute);text-decoration:underline;padding:4px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:10px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.stat small{color:var(--mute);display:block}
+.tbl{width:100%;border-collapse:collapse}
+.tbl th,.tbl td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+.tbl th:first-child,.tbl td:first-child{text-align:left}
+.tbl th{color:var(--mute);font-weight:400;font-size:13px}
+.tbl tr.sel td{background:var(--soft)}
+.scroll{overflow-x:auto}
+.empty{color:var(--mute);padding:14px 0}
+.del.arm{color:var(--warn);font-weight:700}
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:99px;opacity:0;pointer-events:none;transition:opacity .2s}
+#toast.on{opacity:1}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:10px}
+.formgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}
+.formgrid.w3{grid-template-columns:1fr 1fr 1fr}
+.formgrid label{font-size:12px;color:var(--mute);display:block;margin-bottom:2px}
+.formgrid input,.formgrid select{width:100%}
+select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:6px 8px}
+.full{grid-column:1/-1}
+.line2{display:grid;grid-template-columns:1.4fr 90px auto;gap:12px;align-items:end;padding:8px;border:1px solid var(--line);border-radius:8px;margin-bottom:6px;background:var(--bg)}
+.line2.milk{grid-template-columns:1fr 1fr 90px auto}
+.addbtn{border:1px dashed var(--line);background:none;border-radius:8px;padding:8px;width:100%;color:var(--mute)}
+.actions{display:flex;flex-wrap:wrap;gap:16px;margin-top:10px}
+.actions button.warn{color:var(--warn)}
+.ghost{background:none;border:1px solid var(--line);border-radius:6px;padding:8px 14px}
+.itemrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--line)}
+.itemrow .mid{color:var(--mute);font-size:13px}
+.badge{font-size:11px;border-radius:99px;padding:1px 8px;border:1px solid var(--line);color:var(--mute);white-space:nowrap}
+.badge.off{color:var(--warn);border-color:var(--warn)}
+.mini{border:0;background:none;color:var(--acc);padding:4px 8px;font-size:13px}
+.mini.warn{color:var(--warn)}
+.mini+.mini{margin-left:6px}
+</style></head>
+<body><div class="wrap">
+<header><h1>POS ร้านกาแฟ</h1><span class="pill" id="mode"></span>
+<div class="tabs">
+<button data-a="tab" data-v="sell" id="t-sell">ขาย</button>
+<button data-a="tab" data-v="sum" id="t-sum">สรุปรายวัน</button>
+<button data-a="tab" data-v="menu" id="t-menu">เมนู</button>
+<button data-a="tab" data-v="ing" id="t-ing">วัตถุดิบ</button>
+</div></header>
+
+<section id="v-sell" class="sell">
+ <div class="panel"><div><span class="seg" id="milkseg"></span><small style="color:var(--mute)">นมมีผลกับเมนูที่ใช้นม</small></div><div id="menu"></div></div>
+ <div class="panel cart"><b>ออเดอร์นี้</b><div id="lines"></div>
+  <div class="row" style="margin-top:8px"><label for="disc">ส่วนลด (บาท)</label><input id="disc" type="number" min="0" inputmode="decimal" placeholder="0"></div>
+  <div id="tot"></div>
+  <button class="pay" id="pay" data-a="pay" disabled>บันทึกการขาย</button>
+  <div style="text-align:center"><button class="link" data-a="clear">ล้างออเดอร์</button></div></div>
+</section>
+
+<section id="v-sum" hidden>
+ <div class="row" style="justify-content:flex-start;gap:10px;align-items:center"><label for="day">วันที่</label><input type="date" id="day"></div>
+ <div class="stats" id="stats"></div>
+ <div class="panel"><b>รายการขายของวันนี้</b><div class="scroll" id="list"></div></div>
+ <div class="panel" style="margin-top:12px"><b>เมนูขายดีของวันนี้</b><div id="top"></div></div>
+ <div class="panel" style="margin-top:12px"><b>ทุกวัน</b><div class="scroll" id="days"></div></div>
+</section>
+
+<section id="v-menu" hidden>
+ <div class="panel" style="margin-bottom:10px"><b>หมวดหมู่เมนู</b><div id="catlist"></div></div>
+ <button class="addbtn" data-a="new-item">+ เพิ่มเมนูใหม่</button>
+ <div id="itemform"></div>
+ <div id="itemlist"></div>
+</section>
+
+<section id="v-ing" hidden>
+ <div class="row" style="gap:16px;flex-wrap:wrap"><button class="addbtn" style="width:auto;flex:1" data-a="new-ing">+ เพิ่มวัตถุดิบใหม่</button><button class="ghost" id="clearallbtn" data-a="clear-all-ing">ลบวัตถุดิบทั้งหมด</button></div>
+ <div id="ingform"></div>
+ <div class="panel"><div class="scroll" id="inglist"></div></div>
+</section>
+
+</div><div id="toast" role="status"></div>
+
+
+<script>
+const LEGACY=[
+{g:'Clear Matcha',i:[['M3',60,23.437125],['Noko',60,23.437125],['Midori',55,19.837125]]},
+{g:'Matcha Latte',i:[['M3',75,33.259125,32.334125],['Noko',75,33.259125,32.334125],['Midori',70,28.459125,27.534125],['Hojicha',60,18.809125,17.884125]]},
+{g:'Cold Whick Matcha',i:[['M3',80,41.437125,40.049625],['Noko',80,41.437125,40.049625]]},
+{g:'โกโก้และสตรอว์เบอร์รี',i:[['Iced Cocoa',55,22.644725,21.534725],['Cocoa Smoothie',65,29.420725,28.310725],['Strawberry Cocoa',75,23.344725,22.419725]]},
+{g:'Cloud และ Thai Tea (Mmilk)',m:'Mmilk',i:[['Matcha Cloud M3',90,36.262125],['Matcha Cloud Noko',90,36.262125],['Thai Tea Iced',50,17.282125],['Thai Tea Smoothie',60,22.962125],['Thai Tea Cloud',70,21.412125]]}];
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const f0=n=>Math.round(n).toLocaleString('th-TH'),f2=n=>(n||0).toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+const dk=d=>{const x=new Date(d);return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0')};
+const tm=d=>new Date(d).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+const dl=k=>new Date(k+'T12:00:00').toLocaleDateString('th-TH-u-ca-gregory',{day:'numeric',month:'short',year:'numeric'});
+const genId=()=>'x'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const PKG_UNITS=['ถุง','ขวด','ซอง','กล่อง','แพ็ค','ลัง','ชิ้น'];
+const CONTENT_UNITS=['กรัม','กิโลกรัม','มิลลิลิตร','ลิตร','ชิ้น','ฟอง','ใบ','รวม (ไม่แบ่งหน่วย)'];
+function optList(list,sel){return list.map(u=>`<option value="${u}" ${u===sel?'selected':''}>${u}</option>`).join('')}
+const LS='cafe-pos-sales',LSC='cafe-pos-config';
+
+function buildSeed(){
+ const categories=LEGACY.map(g=>({id:genId(),name:g.g})),menu=[];
+ LEGACY.forEach((g,gi)=>{g.i.forEach(it=>{
+  menu.push({id:genId(),categoryId:categories[gi].id,name:it[0],price:it[1],active:true,recipe:[]});
+ })});
+ return{ingredients:[],categories,menu};
+}
+
+let sales=[],cart=[],milk='Mmilk',view='sell',day=dk(Date.now()),db=null,cfgRef=null,mode='wait',armed=null,tt;
+let cfg={ingredients:[],categories:[],menu:[]};
+let draftIng=null,draftItem=null,catAdding=false,catAddName='',editCatId=null,editCatName='';
+
+function lsLoad(k,d){try{return JSON.parse(localStorage.getItem(k)||JSON.stringify(d))}catch(e){return d}}
+function lsSave(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(tt);tt=setTimeout(()=>e.classList.remove('on'),1800)}
+function unitPrice(ing){if(!ing)return 0;const sz=+ing.packageSize;return sz>0?(+ing.packagePrice||0)/sz:(+ing.price||0)}
+function migrateCfg(c){
+ let changed=false;
+ (c.ingredients||[]).forEach(i=>{
+  if(i.packageSize==null){i.packageSize=1;i.packagePrice=i.price!=null?i.price:0;delete i.price;changed=true}
+  if(i.unit==='รวม'){i.unit='รวม (ไม่แบ่งหน่วย)';changed=true}
+  if(!i.packageUnit){i.packageUnit='แพ็ค';changed=true}
+ });
+ return changed;
+}
+
+async function init(){
+ render();
+ try{db=await window.claude.use('db')}catch(e){db=null}
+ if(db){
+  mode='cloud';
+  db.collection('sales').orderBy('ts','desc').onSnapshot(s=>{sales=s.docs.map(d=>({id:d.id,...d.data()}));render()},()=>{mode='err';render()});
+  cfgRef=db.doc('config/main');
+  let seeded=false;
+  cfgRef.onSnapshot(snap=>{
+   if(snap.exists){cfg=snap.data()}
+   else if(!seeded){seeded=true;cfg=buildSeed();cfgRef.set(cfg).catch(()=>{})}
+   render();
+  },()=>{mode='err';render()});
+ }else{
+  mode='local';sales=lsLoad(LS,[]);
+  cfg=lsLoad(LSC,null)||buildSeed();
+  if(migrateCfg(cfg))lsSave(LSC,cfg);
+ }
+ render();
+}
+async function saveConfig(){
+ try{if(mode==='cloud')await cfgRef.set(cfg);else lsSave(LSC,cfg)}
+ catch(e){toast('บันทึกการตั้งค่าไม่สำเร็จ')}
+}
+
+// ---- cost calc ----
+function ingById(id){return cfg.ingredients.find(i=>i.id===id)}
+function lineCost(l,m){
+ if(l.kind==='fixed'){const ig=ingById(l.ingId);return ig?(+l.qty||0)*unitPrice(ig):0}
+ const ig=ingById(m==='Oatside'?l.oatId:l.mmilkId);return ig?(+l.qty||0)*unitPrice(ig):0;
+}
+function hasMilk(item){return (item.recipe||[]).some(l=>l.kind==='milk')}
+function itemCost(item,m){return (item.recipe||[]).reduce((a,l)=>a+lineCost(l,m),0)}
+function ingUsage(id){let n=0;cfg.menu.forEach(it=>(it.recipe||[]).forEach(l=>{if(l.ingId===id||l.oatId===id||l.mmilkId===id)n++}));return n}
+
+// ---- categories ----
+function catById(id){return cfg.categories.find(c=>c.id===id)}
+function resolvedKey(item){
+ if(item.categoryId&&catById(item.categoryId))return item.categoryId;
+ if(item.group)return 'g:'+item.group;
+ return '__none__';
+}
+function keyName(key){
+ if(key==='__none__')return 'ยังไม่ระบุหมวดหมู่';
+ if(key.indexOf('g:')===0)return key.slice(2);
+ const c=catById(key);return c?c.name:'ไม่ทราบหมวดหมู่';
+}
+function catName(item){return keyName(resolvedKey(item))}
+function orderedGroupKeys(list){
+ const keys=cfg.categories.map(c=>c.id),seen=new Set(keys);
+ let hasNone=false;
+ list.forEach(it=>{const k=resolvedKey(it);if(k==='__none__'){hasNone=true;return}if(!seen.has(k)){seen.add(k);keys.push(k)}});
+ if(hasNone)keys.push('__none__');
+ return keys;
+}
+function catItemCount(id){return cfg.menu.filter(it=>resolvedKey(it)===id).length}
+async function addCategory(){
+ const n=catAddName.trim();if(!n){toast('กรุณาใส่ชื่อหมวดหมู่');return}
+ cfg.categories.push({id:genId(),name:n});
+ catAdding=false;catAddName='';await saveConfig();toast('เพิ่มหมวดหมู่แล้ว');render();
+}
+async function saveRenameCat(){
+ const n=editCatName.trim();if(!n){toast('กรุณาใส่ชื่อหมวดหมู่');return}
+ const c=catById(editCatId);if(c)c.name=n;
+ editCatId=null;editCatName='';await saveConfig();toast('บันทึกแล้ว');render();
+}
+async function moveCat(id,dir){
+ const i=cfg.categories.findIndex(c=>c.id===id),j=i+dir;
+ if(i<0||j<0||j>=cfg.categories.length)return;
+ [cfg.categories[i],cfg.categories[j]]=[cfg.categories[j],cfg.categories[i]];
+ await saveConfig();render();
+}
+async function delCat(id){
+ if(!(armed&&armed.t==='cat'&&armed.id===id)){armed={t:'cat',id};render();return}
+ armed=null;cfg.categories=cfg.categories.filter(c=>c.id!==id);await saveConfig();toast('ลบหมวดหมู่แล้ว (เมนูในหมวดนี้จะย้ายไป "ยังไม่ระบุหมวดหมู่")');render();
+}
+
+// ---- sell ----
+function addItem(id){
+ const item=cfg.menu.find(i=>i.id===id);if(!item)return;
+ const dep=hasMilk(item),m=dep?milk:'',cost=itemCost(item,m),key=id+'|'+m;
+ const ex=cart.find(l=>l.key===key);
+ if(ex)ex.q++;else cart.push({key,id,n:item.name,g:catName(item),m,p:item.price,c:cost,q:1});
+ render();
+}
+const disc=()=>Math.max(0,+$('#disc').value||0);
+function sums(){const gross=cart.reduce((a,l)=>a+l.p*l.q,0),cost=cart.reduce((a,l)=>a+l.c*l.q,0),total=Math.max(0,gross-disc());return{gross,cost,total,profit:total-cost}}
+async function pay(){
+ if(!cart.length)return;
+ const s=sums(),rec={ts:new Date().toISOString(),items:cart.map(l=>({n:l.n,m:l.m,p:l.p,c:l.c,q:l.q})),disc:disc(),total:s.total,cost:s.cost,profit:s.profit,cups:cart.reduce((a,l)=>a+l.q,0)};
+ try{
+  if(mode==='cloud')await db.collection('sales').add(rec);
+  else{rec.id='l'+Date.now();sales.unshift(rec);lsSave(LS,sales)}
+  cart=[];$('#disc').value='';toast('บันทึกการขายแล้ว');
+ }catch(e){toast('บันทึกไม่สำเร็จ กรุณาลองอีกครั้ง')}
+ render();
+}
+async function delSale(id){
+ if(!(armed&&armed.t==='sale'&&armed.id===id)){armed={t:'sale',id};render();return}
+ armed=null;
+ try{if(mode==='cloud')await db.doc('sales/'+id).delete();else{sales=sales.filter(s=>s.id!==id);lsSave(LS,sales)}toast('ลบรายการแล้ว')}
+ catch(e){toast('ลบไม่สำเร็จ')}
+ render();
+}
+
+// ---- ingredient CRUD ----
+function openIngForm(id){
+ if(id==='new')draftIng={id:null,name:'',unit:'กรัม',packageUnit:'ถุง',packagePrice:0,packageSize:1};
+ else{
+  const src=ingById(id);
+  draftIng={
+   id:src.id,name:src.name,
+   packagePrice:src.packagePrice!=null?src.packagePrice:(src.price||0),
+   packageSize:src.packageSize!=null?src.packageSize:1,
+   packageUnit:PKG_UNITS.includes(src.packageUnit)?src.packageUnit:'ถุง',
+   unit:CONTENT_UNITS.includes(src.unit)?src.unit:'กรัม'
+  };
+ }
+ view='ing';render();
+}
+async function saveIng(){
+ if(!draftIng.name.trim()){toast('กรุณาใส่ชื่อวัตถุดิบ');return}
+ if(!(+draftIng.packageSize>0)){toast('ขนาดแพ็คต้องมากกว่า 0');return}
+ if(draftIng.id){const i=cfg.ingredients.findIndex(x=>x.id===draftIng.id);cfg.ingredients[i]={...draftIng}}
+ else{cfg.ingredients.push({...draftIng,id:genId()})}
+ draftIng=null;await saveConfig();toast('บันทึกวัตถุดิบแล้ว');render();
+}
+async function delIng(id){
+ if(!(armed&&armed.t==='ing'&&armed.id===id)){armed={t:'ing',id};render();return}
+ armed=null;cfg.ingredients=cfg.ingredients.filter(i=>i.id!==id);await saveConfig();toast('ลบวัตถุดิบแล้ว');render();
+}
+async function clearAllIng(){
+ if(!cfg.ingredients.length)return;
+ if(!(armed&&armed.t==='clearall')){armed={t:'clearall'};render();return}
+ armed=null;
+ cfg.ingredients=[];
+ cfg.menu=cfg.menu.map(it=>({...it,recipe:[]}));
+ await saveConfig();toast('ลบวัตถุดิบทั้งหมดแล้ว (สูตรเมนูถูกล้างด้วย)');render();
+}
+
+// ---- menu item CRUD ----
+function openItemForm(id){
+ if(id==='new'){
+  draftItem={id:null,categoryId:cfg.categories[0]?.id||'__new__',newCatName:'',name:'',price:0,active:true,recipe:[]};
+ }else{
+  const it=JSON.parse(JSON.stringify(cfg.menu.find(x=>x.id===id)));
+  if(!(it.categoryId&&catById(it.categoryId))){
+   it.categoryId='__new__';it.newCatName=it.group||'';
+  }else it.newCatName='';
+  draftItem=it;
+ }
+ view='menu';render();
+}
+function addLine(kind){
+ if(!cfg.ingredients.length){toast('กรุณาเพิ่มวัตถุดิบก่อน');return}
+ const first=cfg.ingredients[0].id;
+ if(kind==='fixed')draftItem.recipe.push({id:genId(),kind:'fixed',ingId:first,qty:1});
+ else draftItem.recipe.push({id:genId(),kind:'milk',oatId:first,mmilkId:first,qty:1});
+ render();
+}
+function rmLine(idx){draftItem.recipe.splice(idx,1);render()}
+async function saveItem(){
+ if(!draftItem.name.trim()){toast('กรุณาใส่ชื่อเมนู');return}
+ if(draftItem.categoryId==='__new__'){
+  const n=(draftItem.newCatName||'').trim();
+  if(!n){toast('กรุณาใส่ชื่อหมวดหมู่ใหม่');return}
+  let c=cfg.categories.find(x=>x.name===n);
+  if(!c){c={id:genId(),name:n};cfg.categories.push(c)}
+  draftItem.categoryId=c.id;
+ }
+ delete draftItem.newCatName;delete draftItem.group;
+ if(draftItem.id){const i=cfg.menu.findIndex(x=>x.id===draftItem.id);cfg.menu[i]={...draftItem}}
+ else{cfg.menu.push({...draftItem,id:genId()})}
+ draftItem=null;await saveConfig();toast('บันทึกเมนูแล้ว');render();
+}
+async function delItem(id){
+ if(!(armed&&armed.t==='item'&&armed.id===id)){armed={t:'item',id};render();return}
+ armed=null;cfg.menu=cfg.menu.filter(i=>i.id!==id);await saveConfig();toast('ลบเมนูแล้ว');render();
+}
+async function toggleActive(id){
+ const it=cfg.menu.find(x=>x.id===id);it.active=!it.active;await saveConfig();render();
+}
+
+// ---- events ----
+document.addEventListener('click',e=>{
+ const b=e.target.closest('[data-a]');if(!b)return;
+ const a=b.dataset.a,v=b.dataset.v;
+ if(a==='add')addItem(v);
+ else if(a==='inc'){cart[+v].q++;render()}
+ else if(a==='dec'){if(--cart[+v].q<=0)cart.splice(+v,1);render()}
+ else if(a==='milk'){milk=v;render()}
+ else if(a==='tab'){view=v;armed=null;draftIng=null;draftItem=null;render()}
+ else if(a==='pay')pay();
+ else if(a==='clear'){cart=[];$('#disc').value='';render()}
+ else if(a==='del')delSale(v);
+ else if(a==='pick'){day=v;render()}
+ else if(a==='new-ing')openIngForm('new');
+ else if(a==='edit-ing')openIngForm(v);
+ else if(a==='save-ing')saveIng();
+ else if(a==='cancel-ing'){draftIng=null;render()}
+ else if(a==='del-ing')delIng(v);
+ else if(a==='clear-all-ing')clearAllIng();
+ else if(a==='cat-add-open'){catAdding=true;catAddName='';render()}
+ else if(a==='cat-add-cancel'){catAdding=false;render()}
+ else if(a==='cat-add-save')addCategory();
+ else if(a==='cat-edit-open'){editCatId=v;editCatName=catById(v)?.name||'';render()}
+ else if(a==='cat-edit-cancel'){editCatId=null;render()}
+ else if(a==='cat-edit-save')saveRenameCat();
+ else if(a==='cat-up')moveCat(v,-1);
+ else if(a==='cat-down')moveCat(v,1);
+ else if(a==='cat-del')delCat(v);
+ else if(a==='new-item')openItemForm('new');
+ else if(a==='edit-item')openItemForm(v);
+ else if(a==='save-item')saveItem();
+ else if(a==='cancel-item'){draftItem=null;render()}
+ else if(a==='del-item')delItem(v);
+ else if(a==='toggle-active')toggleActive(v);
+ else if(a==='add-line-fixed')addLine('fixed');
+ else if(a==='add-line-milk')addLine('milk');
+ else if(a==='rm-line')rmLine(+v);
+});
+function handleField(t){
+ if(t.dataset.form==='cat'){
+  if(t.dataset.f==='catAddName')catAddName=t.value;else if(t.dataset.f==='editCatName')editCatName=t.value;
+  return;
+ }
+ if(t.dataset.form==='ing'){
+  const f=t.dataset.f;if(!f)return;
+  draftIng[f]=(f==='packagePrice'||f==='packageSize')?+t.value:t.value;
+ }else if(t.dataset.form==='item'){
+  if(t.dataset.idx!==undefined){draftItem.recipe[+t.dataset.idx][t.dataset.k]=t.dataset.k==='qty'?+t.value:t.value}
+  else{const f=t.dataset.f;if(!f)return;draftItem[f]=f==='price'?+t.value:t.value;}
+ }
+ updatePreviews();
+}
+document.addEventListener('input',e=>{if(e.target.dataset.form)handleField(e.target)});
+document.addEventListener('change',e=>{
+ if(e.target.dataset.a==='line-kind'){
+  const i=+e.target.dataset.idx,l=draftItem.recipe[i],first=cfg.ingredients[0]?.id||'';
+  draftItem.recipe[i]=e.target.value==='fixed'?{id:l.id,kind:'fixed',ingId:first,qty:l.qty||1}:{id:l.id,kind:'milk',oatId:first,mmilkId:first,qty:l.qty||1};
+  render();
+ }else if(e.target.dataset.form&&e.target.tagName==='SELECT'){handleField(e.target);render();}
+});
+$('#disc').addEventListener('input',renderTot);
+$('#day').addEventListener('change',e=>{if(e.target.value){day=e.target.value;render()}});
+
+function updatePreviews(){
+ if(draftIng&&$('#ingpreview'))$('#ingpreview').textContent=`= ${f2(unitPrice(draftIng))} บาท ต่อ ${draftIng.unit||'หน่วย'} 1 หน่วย`;
+ if(draftItem&&$('#itempreview'))$('#itempreview').innerHTML=itemPreviewHtml(draftItem);
+}
+function itemPreviewHtml(it){
+ const dep=hasMilk(it);
+ if(dep){
+  const co=itemCost(it,'Oatside'),cm=itemCost(it,'Mmilk');
+  return `<div class="row"><span>ต้นทุน (Oatside)</span><b>${f2(co)}</b></div><div class="row"><span>กำไร (Oatside)</span><b class="${it.price-co>=0?'pos':'neg'}">${f2(it.price-co)}</b></div>
+  <div class="row"><span>ต้นทุน (Mmilk)</span><b>${f2(cm)}</b></div><div class="row"><span>กำไร (Mmilk)</span><b class="${it.price-cm>=0?'pos':'neg'}">${f2(it.price-cm)}</b></div>`;
+ }
+ const c=itemCost(it,'');
+ return `<div class="row"><span>ต้นทุน</span><b>${f2(c)}</b></div><div class="row"><span>กำไร</span><b class="${it.price-c>=0?'pos':'neg'}">${f2(it.price-c)}</b></div>`;
+}
+
+function render(){
+ if(!cfg.categories)cfg.categories=[];
+ $('#mode').textContent={wait:'กำลังเชื่อมต่อ…',cloud:'บันทึกออนไลน์',local:'บันทึกในเบราว์เซอร์นี้เท่านั้น',err:'เชื่อมต่อฐานข้อมูลไม่ได้'}[mode];
+ ['sell','sum','menu','ing'].forEach(x=>{$('#v-'+x).hidden=view!==x;$('#t-'+x).classList.toggle('on',view===x)});
+ if(view==='sell')renderSell();
+ if(view==='sum')renderSum();
+ if(view==='menu')renderMenu();
+ if(view==='ing')renderIng();
+}
+
+function renderSell(){
+ $('#milkseg').innerHTML=['Mmilk','Oatside'].map(m=>`<button data-a="milk" data-v="${m}" class="${milk===m?'on':''}">${m}</button>`).join('');
+ const active=cfg.menu.filter(i=>i.active!==false),keys=orderedGroupKeys(active);
+ $('#menu').innerHTML=keys.length?keys.map(k=>`<h2>${esc(keyName(k))}</h2><div class="tiles">${active.filter(it=>resolvedKey(it)===k).map(it=>`<button class="tile" data-a="add" data-v="${it.id}"><b>${esc(it.name)}</b><span>${it.price}</span></button>`).join('')}</div>`).join(''):'<div class="empty">ยังไม่มีเมนู ไปที่แท็บ "เมนู" เพื่อเพิ่ม</div>';
+ $('#lines').innerHTML=cart.length?cart.map((l,i)=>`<div class="line"><div>${esc(l.n)}<small>${esc(l.g)}${l.m?' · '+esc(l.m):''} · ${l.p} บาท</small></div><div class="qty"><button data-a="dec" data-v="${i}" aria-label="ลด">−</button>${l.q}<button data-a="inc" data-v="${i}" aria-label="เพิ่ม">+</button></div><b>${f0(l.p*l.q)}</b></div>`).join(''):'<div class="empty">แตะเมนูทางซ้ายเพื่อเพิ่มลงออเดอร์</div>';
+ renderTot();
+}
+function renderTot(){
+ const s=sums();
+ $('#tot').innerHTML=`<div class="row"><span>ยอดขาย</span><span class="big">${f0(s.total)} บาท</span></div><div class="row"><span>ต้นทุน</span><span>${f2(s.cost)}</span></div><div class="row"><span>กำไร</span><span class="pos">${f2(s.profit)}</span></div>`;
+ $('#pay').disabled=!cart.length;
+}
+
+function renderSum(){
+ $('#day').value=day;
+ const ds=sales.filter(s=>dk(s.ts)===day).sort((a,b)=>b.ts<a.ts?-1:1);
+ const t=ds.reduce((a,s)=>({c:a.c+s.cups,r:a.r+s.total,k:a.k+s.cost,p:a.p+s.profit}),{c:0,r:0,k:0,p:0});
+ $('#stats').innerHTML=[['จำนวนแก้ว',f0(t.c)],['ยอดขาย',f0(t.r)+' บาท'],['ต้นทุน',f2(t.k)],['กำไร',f2(t.p)],['ออเดอร์',ds.length]].map(([a,b],i)=>`<div class="stat"><small>${a}</small><span class="big ${i===3?'pos':''}">${b}</span></div>`).join('');
+ $('#list').innerHTML=ds.length?`<table class="tbl"><tr><th>เวลา</th><th>รายการ</th><th>ยอดขาย</th><th>กำไร</th><th></th></tr>${ds.map(s=>`<tr><td>${tm(s.ts)}</td><td style="text-align:left">${s.items.map(l=>esc(l.n)+(l.m?' ('+esc(l.m)+')':'')+' ×'+l.q).join('<br>')}${s.disc?`<br><small style="color:var(--mute)">ส่วนลด ${f0(s.disc)}</small>`:''}</td><td>${f0(s.total)}</td><td class="pos">${f2(s.profit)}</td><td><button class="link del ${armed&&armed.t==='sale'&&armed.id===s.id?'arm':''}" data-a="del" data-v="${esc(s.id)}">${armed&&armed.t==='sale'&&armed.id===s.id?'ยืนยันลบ':'ลบ'}</button></td></tr>`).join('')}</table>`:'<div class="empty">ยังไม่มีรายการขายในวันนี้</div>';
+ const top={};ds.forEach(s=>s.items.forEach(l=>top[l.n]=(top[l.n]||0)+l.q));
+ const tl=Object.entries(top).sort((a,b)=>b[1]-a[1]);
+ $('#top').innerHTML=tl.length?tl.map(([n,q])=>`<div class="row"><span>${esc(n)}</span><span>${q} แก้ว</span></div>`).join(''):'<div class="empty">ยังไม่มีข้อมูล</div>';
+ const by={};sales.forEach(s=>{const k=dk(s.ts),o=by[k]||(by[k]={c:0,r:0,p:0});o.c+=s.cups;o.r+=s.total;o.p+=s.profit});
+ const ks=Object.keys(by).sort().reverse();
+ $('#days').innerHTML=ks.length?`<table class="tbl"><tr><th>วันที่</th><th>แก้ว</th><th>ยอดขาย</th><th>กำไร</th></tr>${ks.map(k=>`<tr class="${k===day?'sel':''}"><td><button class="link" data-a="pick" data-v="${k}">${dl(k)}</button></td><td>${by[k].c}</td><td>${f0(by[k].r)}</td><td class="pos">${f2(by[k].p)}</td></tr>`).join('')}</table>`:'<div class="empty">ยังไม่มีข้อมูล</div>';
+}
+
+function ingOptions(sel){return cfg.ingredients.map(i=>`<option value="${i.id}" ${i.id===sel?'selected':''}>${esc(i.name)}</option>`).join('')}
+function renderCatList(){
+ const el=$('#catlist');if(!el)return;
+ const rows=cfg.categories.map((c,i)=>editCatId===c.id?
+  `<div class="itemrow"><input data-form="cat" data-f="editCatName" value="${esc(editCatName)}" style="flex:1"><div class="actions" style="margin:0"><button class="mini" data-a="cat-edit-save">บันทึก</button><button class="mini" data-a="cat-edit-cancel">ยกเลิก</button></div></div>`:
+  `<div class="itemrow"><div><b>${esc(c.name)}</b><div class="mid">${catItemCount(c.id)} เมนู</div></div>
+   <div class="actions" style="margin:0">
+    <button class="mini" data-a="cat-up" data-v="${c.id}" ${i===0?'disabled':''} aria-label="เลื่อนขึ้น">▲</button>
+    <button class="mini" data-a="cat-down" data-v="${c.id}" ${i===cfg.categories.length-1?'disabled':''} aria-label="เลื่อนลง">▼</button>
+    <button class="mini" data-a="cat-edit-open" data-v="${c.id}">แก้ไข</button>
+    <button class="mini warn" data-a="cat-del" data-v="${c.id}">${armed&&armed.t==='cat'&&armed.id===c.id?'ยืนยันลบ':'ลบ'}</button>
+   </div></div>`).join('');
+ const add=catAdding?`<div class="itemrow"><input data-form="cat" data-f="catAddName" value="${esc(catAddName)}" placeholder="ชื่อหมวดหมู่ใหม่" style="flex:1"><div class="actions" style="margin:0"><button class="mini" data-a="cat-add-save">บันทึก</button><button class="mini" data-a="cat-add-cancel">ยกเลิก</button></div></div>`
+  :`<button class="addbtn" data-a="cat-add-open">+ เพิ่มหมวดหมู่</button>`;
+ el.innerHTML=(rows||'<div class="empty">ยังไม่มีหมวดหมู่</div>')+add;
+}
+function catSelectOptions(sel){
+ let h=cfg.categories.map(c=>`<option value="${c.id}" ${c.id===sel?'selected':''}>${esc(c.name)}</option>`).join('');
+ h+=`<option value="__none__" ${sel==='__none__'?'selected':''}>ยังไม่ระบุหมวดหมู่</option>`;
+ h+=`<option value="__new__" ${sel==='__new__'?'selected':''}>+ เพิ่มหมวดหมู่ใหม่...</option>`;
+ return h;
+}
+function renderMenu(){
+ renderCatList();
+ $('#itemform').innerHTML=!draftItem?'':`<div class="card">
+  <div class="formgrid">
+   <div><label>หมวดหมู่</label><select data-form="item" data-f="categoryId">${catSelectOptions(draftItem.categoryId)}</select></div>
+   ${draftItem.categoryId==='__new__'?`<div><label>ชื่อหมวดหมู่ใหม่</label><input data-form="item" data-f="newCatName" value="${esc(draftItem.newCatName||'')}"></div>`:''}
+   <div><label>ชื่อเมนู</label><input data-form="item" data-f="name" value="${esc(draftItem.name)}"></div>
+   <div><label>ราคาขาย (บาท)</label><input type="number" min="0" step="0.01" data-form="item" data-f="price" value="${draftItem.price}"></div>
+  </div>
+  <label style="font-size:13px;color:var(--mute)">ส่วนผสม</label>
+  ${!cfg.ingredients.length?'<div class="empty">ยังไม่มีวัตถุดิบในระบบ — ไปที่แท็บ "วัตถุดิบ" เพื่อเพิ่มก่อน</div>':draftItem.recipe.map((l,i)=>l.kind==='fixed'?`<div class="line2">
+    <div><label style="font-size:11px;color:var(--mute)">วัตถุดิบ</label><select data-form="item" data-idx="${i}" data-k="ingId">${ingOptions(l.ingId)}</select></div>
+    <div><label style="font-size:11px;color:var(--mute)">ปริมาณ (${esc(ingById(l.ingId)?.unit||'หน่วย')})</label><input type="number" min="0" step="any" data-form="item" data-idx="${i}" data-k="qty" value="${l.qty}"></div>
+    <button class="mini warn" data-a="rm-line" data-v="${i}">ลบ</button>
+   </div>`:`<div class="line2 milk">
+    <div><label style="font-size:11px;color:var(--mute)">Oatside (${esc(ingById(l.oatId)?.unit||'หน่วย')})</label><select data-form="item" data-idx="${i}" data-k="oatId">${ingOptions(l.oatId)}</select></div>
+    <div><label style="font-size:11px;color:var(--mute)">Mmilk (${esc(ingById(l.mmilkId)?.unit||'หน่วย')})</label><select data-form="item" data-idx="${i}" data-k="mmilkId">${ingOptions(l.mmilkId)}</select></div>
+    <div><label style="font-size:11px;color:var(--mute)">ปริมาณ</label><input type="number" min="0" step="any" data-form="item" data-idx="${i}" data-k="qty" value="${l.qty}"></div>
+    <button class="mini warn" data-a="rm-line" data-v="${i}">ลบ</button>
+   </div>`).join('')}
+  <div class="row" style="gap:16px"><button class="addbtn" data-a="add-line-fixed">+ วัตถุดิบคงที่</button><button class="addbtn" data-a="add-line-milk">+ วัตถุดิบตามชนิดนม</button></div>
+  <select data-a="line-kind" style="display:none"></select>
+  <div class="panel" style="margin-top:8px" id="itempreview">${itemPreviewHtml(draftItem)}</div>
+  <div class="actions"><button class="pay" style="width:auto;margin:0" data-a="save-item">บันทึกเมนู</button><button class="ghost" data-a="cancel-item">ยกเลิก</button>${draftItem.id?`<button class="mini warn" data-a="del-item" data-v="${draftItem.id}" style="margin-left:auto">${armed&&armed.t==='item'&&armed.id===draftItem.id?'ยืนยันลบเมนูนี้':'ลบเมนูนี้'}</button>`:''}</div>
+ </div>`;
+ const keys=orderedGroupKeys(cfg.menu);
+ $('#itemlist').innerHTML=keys.length?keys.map(k=>`<h2>${esc(keyName(k))}</h2><div class="card">${cfg.menu.filter(it=>resolvedKey(it)===k).map(it=>{
+  const dep=hasMilk(it);
+  const costTxt=dep?`Oat ${f2(itemCost(it,'Oatside'))} / Mmilk ${f2(itemCost(it,'Mmilk'))}`:f2(itemCost(it,''));
+  return `<div class="itemrow"><div><b>${esc(it.name)}</b>${it.active===false?' <span class="badge off">ปิดขาย</span>':''}<div class="mid">ราคา ${it.price} · ต้นทุน ${costTxt}</div></div>
+   <div class="actions" style="margin:0"><button class="mini" data-a="toggle-active" data-v="${it.id}">${it.active===false?'เปิดขาย':'ปิดขาย'}</button><button class="mini" data-a="edit-item" data-v="${it.id}">แก้ไข</button></div></div>`;
+ }).join('')}</div>`).join(''):'<div class="empty">ยังไม่มีเมนู</div>';
+}
+
+function renderIng(){
+ if($('#clearallbtn'))$('#clearallbtn').textContent=armed&&armed.t==='clearall'?'ยืนยันลบวัตถุดิบทั้งหมด':'ลบวัตถุดิบทั้งหมด';
+ $('#ingform').innerHTML=!draftIng?'':`<div class="card">
+  <div class="formgrid w3">
+   <div class="full"><label>ชื่อวัตถุดิบ</label><input data-form="ing" data-f="name" value="${esc(draftIng.name)}" placeholder="เช่น ผงมัทฉะ"></div>
+   <div><label>ราคา (บาท)</label><input type="number" min="0" step="0.01" data-form="ing" data-f="packagePrice" value="${draftIng.packagePrice}" placeholder="เช่น 200"></div>
+   <div><label>ต่อ (หน่วยบรรจุ)</label><select data-form="ing" data-f="packageUnit">${optList(PKG_UNITS,draftIng.packageUnit)}</select></div>
+   <div><label>1 ${esc(draftIng.packageUnit||'แพ็ค')} มีกี่หน่วย</label><input type="number" min="0.0001" step="any" data-form="ing" data-f="packageSize" value="${draftIng.packageSize}" placeholder="เช่น 200"></div>
+   <div><label>หน่วยนับ (ที่ใช้ในสูตร)</label><select data-form="ing" data-f="unit">${optList(CONTENT_UNITS,draftIng.unit)}</select></div>
+  </div>
+  <div style="color:var(--mute);font-size:13px">เช่น ผงมัทฉะ ราคา 200 บาท ต่อ 1 ถุง ถุงนั้นมี 200 กรัม → ราคา 200, ต่อ "ถุง", 1 ถุงมี 200, หน่วยนับ "กรัม"</div>
+  <div id="ingpreview" class="big" style="margin-top:6px">${f0(draftIng.packagePrice)} บาท / ${esc(draftIng.packageUnit||'แพ็ค')} (${draftIng.packageSize} ${esc(draftIng.unit||'หน่วย')}) → ${f2(unitPrice(draftIng))} บาท/${esc(draftIng.unit||'หน่วย')}</div>
+  <div class="actions"><button class="pay" style="width:auto;margin:0" data-a="save-ing">บันทึกวัตถุดิบ</button><button class="ghost" data-a="cancel-ing">ยกเลิก</button>${draftIng.id?`<button class="mini warn" data-a="del-ing" data-v="${draftIng.id}" style="margin-left:auto">${armed&&armed.t==='ing'&&armed.id===draftIng.id?'ยืนยันลบ':'ลบวัตถุดิบนี้'}</button>`:''}</div>
+ </div>`;
+ $('#inglist').innerHTML=cfg.ingredients.length?`<table class="tbl"><tr><th>ชื่อ</th><th>ราคา/บรรจุภัณฑ์</th><th>บรรจุ</th><th>ราคา/หน่วย</th><th>ใช้ในกี่เมนู</th><th></th></tr>${cfg.ingredients.map(i=>`<tr><td style="text-align:left">${esc(i.name)}</td><td>${f0(i.packagePrice!=null?i.packagePrice:i.price)} บาท/${esc(i.packageUnit||'แพ็ค')}</td><td>${i.packageSize||1} ${esc(i.unit||'หน่วย')}</td><td>${f2(unitPrice(i))}</td><td>${ingUsage(i.id)}</td><td><button class="mini" data-a="edit-ing" data-v="${i.id}">แก้ไข</button> <button class="mini warn" data-a="del-ing" data-v="${i.id}">${armed&&armed.t==='ing'&&armed.id===i.id?'ยืนยันลบ':'ลบ'}</button></td></tr>`).join('')}</table>`:'<div class="empty">ยังไม่มีวัตถุดิบ กดปุ่มด้านบนเพื่อเพิ่ม</div>';
+}
+init();
+</script></body></html>
